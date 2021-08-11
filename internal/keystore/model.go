@@ -13,6 +13,8 @@ type Credential struct {
 	Host     string
 	Token    string
 	Database string
+	KeyId    string
+	Secret   string
 }
 
 func (c Credential) Validate() error {

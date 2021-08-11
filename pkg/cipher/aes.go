@@ -10,6 +10,28 @@ import (
 	"io"
 )
 
+func EncryptString(data string, passphrase string) (string, error) {
+
+	encrypt, err := Encrypt([]byte(data), passphrase)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(encrypt), nil
+}
+
+func DecryptString(data string, passphrase string) (string, error) {
+
+	decrypt, err := Decrypt([]byte(data), passphrase)
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(decrypt), nil
+}
+
 func Encrypt(data []byte, passphrase string) ([]byte, error) {
 
 	var result []byte

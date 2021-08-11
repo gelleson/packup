@@ -58,7 +58,7 @@ func (s Service) FindByEmail(email string) (User, error) {
 
 	user := User{}
 
-	if trx := s.db.Conn().First(&user, "email = ?", email); trx.Error != nil {
+	if trx := s.db.Conn().Preload("Group").First(&user, "email = ?", email); trx.Error != nil {
 		return User{}, trx.Error
 	}
 

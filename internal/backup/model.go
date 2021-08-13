@@ -37,7 +37,7 @@ const (
 
 type Template string
 
-const DefaultBackupTemplate Template = "{{ .Namespace }}/{{ .Name }}-{{ .Timestamp }}.{{ .Ext }}"
+const DefaultBackupTemplate Template = "{{ .Name }}-{{ .Timestamp }}.{{ .Ext }}"
 
 type Backup struct {
 	gorm.Model
@@ -45,9 +45,8 @@ type Backup struct {
 	Compress           compress.Type `validate:"required"`
 	Tag                string        `validate:"required"`
 	Keystore           string        `validate:"required"`
-	Bucket             string        `validate:"required"`
+	Namespace          string        `validate:"required"`
 	BackupNameTemplate Template
-	Namespace          string
 	Timezone           string
 	LastExecutionTime  time.Time
 
@@ -94,11 +93,13 @@ func (b *Backup) SetDefaults() {
 type Status string
 
 const (
-	FailedStatus Status = "failed"
-	OkStatus     Status = "ok"
+	FailedStatus     Status = "failed"
+	OkStatus         Status = "ok"
+	PendingStatus    Status = "pending"
+	ExportFailStatus Status = "export_failed"
 )
 
-type History struct {
+type Snapshot struct {
 	gorm.Model
 	Status     Status
 	Message    string
@@ -106,6 +107,7 @@ type History struct {
 	Tag        string
 	AgentID    uint
 	BackupID   uint
+	Backup     Backup
 	ExecutedAt time.Time
 }
 

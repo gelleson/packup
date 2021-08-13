@@ -71,6 +71,17 @@ func (s BackupService) Find(skip uint, limit uint) ([]Backup, error) {
 	return backups, nil
 }
 
+func (s BackupService) FindById(id uint) (Backup, error) {
+
+	backup := Backup{}
+
+	if tx := s.db.Conn().First(&backup, "id = ?", id); tx.Error != nil {
+		return Backup{}, tx.Error
+	}
+
+	return backup, nil
+}
+
 func (s BackupService) Delete(id uint) error {
 
 	if tx := s.db.Conn().Delete(&Backup{}, "id = ?", int(id)); tx.Error != nil {

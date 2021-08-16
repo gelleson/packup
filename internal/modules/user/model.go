@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/gelleson/packup/internal/group"
+	"github.com/gelleson/packup/internal/modules/group"
 	"gorm.io/gorm"
 	"time"
 )

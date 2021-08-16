@@ -1,7 +1,7 @@
 package backup
 
 import (
-	"github.com/gelleson/packup/internal/keystore"
+	"github.com/gelleson/packup/internal/modules/keystore"
 	"github.com/gelleson/packup/pkg/database"
 )
 

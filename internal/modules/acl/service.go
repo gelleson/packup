@@ -1,7 +1,7 @@
 package acl
 
 import (
-	"github.com/gelleson/packup/internal/group"
+	"github.com/gelleson/packup/internal/modules/group"
 	"github.com/gelleson/packup/pkg/database"
 	"github.com/pkg/errors"
 )

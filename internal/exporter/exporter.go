@@ -46,36 +46,10 @@ func (s ExportService) Export(snapshotId uint, namespace, tag, name string, size
 
 			defer wg.Done()
 
-			uploader, isOk := s.uploader[e.Type]
-
-			if !isOk && s.needToSkip {
-				return
+			if err := s.export(e.Type, snapshotId, namespace, name, size, body); err != nil {
+				errs = append(errs, err)
 			}
 
-			if !isOk && !s.needToSkip {
-				errs = append(errs, errors.New("exporter doesn't support"))
-				return
-			}
-
-			id, err := uploader.Put(namespace, name, body)
-
-			if err != nil {
-				errs = append(errs, errors.New("exporter doesn't support"))
-				return
-			}
-
-			snapshot := Snapshot{
-				Size:       size,
-				Filename:   name,
-				Namespace:  namespace,
-				UploadID:   id,
-				SnapshotID: snapshotId,
-			}
-
-			if tx := s.db.Conn().Create(&snapshot); tx.Error != nil {
-				errs = append(errs, tx.Error)
-				return
-			}
 		}(export)
 	}
 
@@ -86,6 +60,44 @@ func (s ExportService) Export(snapshotId uint, namespace, tag, name string, size
 	}
 
 	return nil
+}
+
+func (s ExportService) export(ext Type, snapshotId uint, namespace, name string, size uint, body io.Reader) error {
+
+	uploader, isOk := s.uploader[ext]
+
+	if !isOk && !s.needToSkip {
+		return errors.New("doesn't support uploader")
+	} else if !isOk && s.needToSkip {
+		return nil
+	}
+
+	id, err := uploader.Put(namespace, name, body)
+
+	if err != nil {
+		return err
+	}
+
+	snapshot := createSnapshot(id, snapshotId, namespace, name, size)
+
+	if tx := s.db.Conn().Create(&snapshot); tx.Error != nil {
+		return tx.Error
+	}
+
+	return nil
+}
+
+func createSnapshot(id string, snapshotId uint, namespace, name string, size uint) Snapshot {
+
+	snapshot := Snapshot{
+		Size:       size,
+		Filename:   name,
+		Namespace:  namespace,
+		UploadID:   id,
+		SnapshotID: snapshotId,
+	}
+
+	return snapshot
 }
 
 func mergeErrors(array []error) error {

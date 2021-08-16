@@ -109,8 +109,9 @@ func (s SnapshotService) Find(input FindSnapshotQuery) (SnapshotWithTotal, error
 
 	conn = conn.Where(queryConstructor(conn, input))
 
+	wg.Add(2)
+
 	go func() {
-		wg.Add(1)
 
 		defer wg.Done()
 
@@ -120,7 +121,6 @@ func (s SnapshotService) Find(input FindSnapshotQuery) (SnapshotWithTotal, error
 	}()
 
 	go func() {
-		wg.Add(1)
 
 		defer wg.Done()
 

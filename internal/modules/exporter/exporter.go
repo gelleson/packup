@@ -40,9 +40,9 @@ func (s ExportService) Export(snapshotId uint, namespace, tag, name string, size
 	var wg sync.WaitGroup
 
 	for _, export := range exports {
-		go func(e Export) {
+		wg.Add(1)
 
-			wg.Add(1)
+		go func(e Export) {
 
 			defer wg.Done()
 

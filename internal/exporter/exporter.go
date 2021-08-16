@@ -1,10 +1,12 @@
 package exporter
 
 import (
+	"fmt"
 	"github.com/gelleson/packup/pkg/database"
 	"github.com/gelleson/packup/pkg/upload"
 	"github.com/pkg/errors"
 	"io"
+	"strings"
 	"sync"
 )
 
@@ -83,8 +85,19 @@ func (s ExportService) Export(snapshotId uint, namespace, tag, name string, size
 	wg.Wait()
 
 	if errs != nil {
-		return errs[0]
+		return mergeErrors(errs)
 	}
 
 	return nil
+}
+
+func mergeErrors(array []error) error {
+
+	errorString := make([]string, len(array), cap(array))
+
+	for index, err := range array {
+		errorString[index] = err.Error()
+	}
+
+	return fmt.Errorf(strings.Join(errorString, "\n"))
 }

@@ -6,17 +6,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type Service struct {
+type GroupService struct {
 	db *database.Database
 
 	createdDefaultDatabase bool
 }
 
-func NewService(db *database.Database) *Service {
-	return &Service{db: db}
+func NewGroupService(db *database.Database) *GroupService {
+	return &GroupService{db: db}
 }
 
-func (s Service) Create(input CreateGroupInput) (Group, error) {
+func (s GroupService) Create(input CreateGroupInput) (Group, error) {
 
 	if !s.HasDefaultGroup() {
 		return Group{}, errors.New("first need to create default group")
@@ -37,7 +37,7 @@ func (s Service) Create(input CreateGroupInput) (Group, error) {
 	return group, nil
 }
 
-func (s Service) CreateDefaultGroup() (Group, error) {
+func (s GroupService) CreateDefaultGroup() (Group, error) {
 
 	group := Group{
 		Model: gorm.Model{
@@ -53,7 +53,7 @@ func (s Service) CreateDefaultGroup() (Group, error) {
 	return group, nil
 }
 
-func (s Service) FindById(id uint) (Group, error) {
+func (s GroupService) FindById(id uint) (Group, error) {
 
 	if !s.HasDefaultGroup() {
 		return Group{}, errors.New("first need to create default group")
@@ -68,14 +68,14 @@ func (s Service) FindById(id uint) (Group, error) {
 	return group, nil
 }
 
-func (s Service) Exist(id uint) bool {
+func (s GroupService) Exist(id uint) bool {
 
 	_, err := s.FindById(id)
 
 	return err == nil
 }
 
-func (s *Service) HasDefaultGroup() bool {
+func (s *GroupService) HasDefaultGroup() bool {
 
 	if s.createdDefaultDatabase {
 		return true

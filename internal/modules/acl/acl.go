@@ -10,16 +10,16 @@ type groupService interface {
 	Exist(id uint) bool
 }
 
-type ACL struct {
+type AclService struct {
 	db           *database.Database
 	groupService groupService
 }
 
-func NewAcl(db *database.Database, groupService groupService) *ACL {
-	return &ACL{db: db, groupService: groupService}
+func NewAclService(db *database.Database, groupService groupService) *AclService {
+	return &AclService{db: db, groupService: groupService}
 }
 
-func (a ACL) Create(r Rule) (Rule, error) {
+func (a AclService) Create(r Rule) (Rule, error) {
 
 	if !a.groupService.Exist(r.GroupID) {
 		return Rule{}, errors.New("group doesn't exist")
@@ -38,7 +38,7 @@ func (a ACL) Create(r Rule) (Rule, error) {
 	return rule, nil
 }
 
-func (a ACL) Can(groupId uint, operation Operation, resource Resource) bool {
+func (a AclService) Can(groupId uint, operation Operation, resource Resource) bool {
 
 	rule := Rule{}
 
@@ -49,7 +49,7 @@ func (a ACL) Can(groupId uint, operation Operation, resource Resource) bool {
 	return rule.ID != 0
 }
 
-func (a ACL) HasDefaultRules() bool {
+func (a AclService) HasDefaultRules() bool {
 
 	rule := Rule{}
 

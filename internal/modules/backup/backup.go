@@ -18,7 +18,7 @@ func NewBackupService(db *database.Database, keystoreService keystoreService) *B
 	return &BackupService{db: db, keystoreService: keystoreService}
 }
 
-func (s BackupService) Create(b Backup) (Backup, error) {
+func (bs BackupService) Create(b Backup) (Backup, error) {
 
 	if err := b.Validate(); err != nil {
 		return Backup{}, err
@@ -27,19 +27,19 @@ func (s BackupService) Create(b Backup) (Backup, error) {
 	b.SetDefaults()
 
 	if b.Keystore != "" {
-		if _, err := s.keystoreService.Get(b.Keystore); err != nil {
+		if _, err := bs.keystoreService.Get(b.Keystore); err != nil {
 			return Backup{}, err
 		}
 	}
 
-	if tx := s.db.Conn().Create(&b); tx.Error != nil {
+	if tx := bs.db.Conn().Create(&b); tx.Error != nil {
 		return Backup{}, tx.Error
 	}
 
 	return b, nil
 }
 
-func (s BackupService) Update(b Backup) (Backup, error) {
+func (bs BackupService) Update(b Backup) (Backup, error) {
 
 	if err := b.Validate(); err != nil {
 		return Backup{}, err
@@ -48,43 +48,43 @@ func (s BackupService) Update(b Backup) (Backup, error) {
 	b.SetDefaults()
 
 	if b.Keystore != "" {
-		if _, err := s.keystoreService.Get(b.Keystore); err != nil {
+		if _, err := bs.keystoreService.Get(b.Keystore); err != nil {
 			return Backup{}, err
 		}
 	}
 
-	if tx := s.db.Conn().Model(&b).Updates(b); tx.Error != nil {
+	if tx := bs.db.Conn().Model(&b).Updates(b); tx.Error != nil {
 		return Backup{}, tx.Error
 	}
 
 	return b, nil
 }
 
-func (s BackupService) Find(skip uint, limit uint) ([]Backup, error) {
+func (bs BackupService) Find(skip uint, limit uint) ([]Backup, error) {
 
 	backups := make([]Backup, 0)
 
-	if tx := s.db.Conn().Limit(int(limit)).Offset(int(skip)).Find(&backups); tx.Error != nil {
+	if tx := bs.db.Conn().Limit(int(limit)).Offset(int(skip)).Find(&backups); tx.Error != nil {
 		return nil, tx.Error
 	}
 
 	return backups, nil
 }
 
-func (s BackupService) FindById(id uint) (Backup, error) {
+func (bs BackupService) FindById(id uint) (Backup, error) {
 
 	backup := Backup{}
 
-	if tx := s.db.Conn().First(&backup, "id = ?", id); tx.Error != nil {
+	if tx := bs.db.Conn().First(&backup, "id = ?", id); tx.Error != nil {
 		return Backup{}, tx.Error
 	}
 
 	return backup, nil
 }
 
-func (s BackupService) Delete(id uint) error {
+func (bs BackupService) Delete(id uint) error {
 
-	if tx := s.db.Conn().Delete(&Backup{}, "id = ?", int(id)); tx.Error != nil {
+	if tx := bs.db.Conn().Delete(&Backup{}, "id = ?", int(id)); tx.Error != nil {
 		return tx.Error
 	}
 

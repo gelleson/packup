@@ -16,9 +16,9 @@ func NewGroupService(db *database.Database) *GroupService {
 	return &GroupService{db: db}
 }
 
-func (s GroupService) Create(input CreateGroupInput) (Group, error) {
+func (g GroupService) Create(input CreateGroupInput) (Group, error) {
 
-	if !s.HasDefaultGroup() {
+	if !g.HasDefaultGroup() {
 		return Group{}, errors.New("first need to create default group")
 	}
 
@@ -30,14 +30,14 @@ func (s GroupService) Create(input CreateGroupInput) (Group, error) {
 		Name: input.Name,
 	}
 
-	if trx := s.db.Conn().Create(&group); trx.Error != nil {
+	if trx := g.db.Conn().Create(&group); trx.Error != nil {
 		return Group{}, trx.Error
 	}
 
 	return group, nil
 }
 
-func (s GroupService) CreateDefaultGroup() (Group, error) {
+func (g GroupService) CreateDefaultGroup() (Group, error) {
 
 	group := Group{
 		Model: gorm.Model{
@@ -46,48 +46,48 @@ func (s GroupService) CreateDefaultGroup() (Group, error) {
 		Name: "default",
 	}
 
-	if trx := s.db.Conn().Create(&group); trx.Error != nil {
+	if trx := g.db.Conn().Create(&group); trx.Error != nil {
 		return Group{}, trx.Error
 	}
 
 	return group, nil
 }
 
-func (s GroupService) FindById(id uint) (Group, error) {
+func (g GroupService) FindById(id uint) (Group, error) {
 
-	if !s.HasDefaultGroup() {
+	if !g.HasDefaultGroup() {
 		return Group{}, errors.New("first need to create default group")
 	}
 
 	group := Group{}
 
-	if trx := s.db.Conn().First(&group, "id = ?", id); trx.Error != nil {
+	if trx := g.db.Conn().First(&group, "id = ?", id); trx.Error != nil {
 		return Group{}, trx.Error
 	}
 
 	return group, nil
 }
 
-func (s GroupService) Exist(id uint) bool {
+func (g GroupService) Exist(id uint) bool {
 
-	_, err := s.FindById(id)
+	_, err := g.FindById(id)
 
 	return err == nil
 }
 
-func (s *GroupService) HasDefaultGroup() bool {
+func (g *GroupService) HasDefaultGroup() bool {
 
-	if s.createdDefaultDatabase {
+	if g.createdDefaultDatabase {
 		return true
 	}
 
 	group := Group{}
 
-	if trx := s.db.Conn().First(&group, "id = ?", DefaultGroupId); trx.Error != nil {
+	if trx := g.db.Conn().First(&group, "id = ?", DefaultGroupId); trx.Error != nil {
 		return false
 	}
 
-	s.createdDefaultDatabase = true
+	g.createdDefaultDatabase = true
 
 	return true
 }

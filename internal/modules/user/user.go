@@ -10,16 +10,16 @@ type groupService interface {
 	Exist(id uint) bool
 }
 
-type Service struct {
+type UserService struct {
 	db           *database.Database
 	groupService groupService
 }
 
-func NewService(db *database.Database, groupService groupService) *Service {
-	return &Service{db: db, groupService: groupService}
+func NewUserService(db *database.Database, groupService groupService) *UserService {
+	return &UserService{db: db, groupService: groupService}
 }
 
-func (s Service) Create(input CreateUserInput) (User, error) {
+func (u UserService) Create(input CreateUserInput) (User, error) {
 
 	if err := input.Validate(); err != nil {
 		return User{}, err
@@ -30,44 +30,44 @@ func (s Service) Create(input CreateUserInput) (User, error) {
 		Password: input.Password,
 	}
 
-	if input.HasGroup() && s.groupService.Exist(input.GroupId) {
+	if input.HasGroup() && u.groupService.Exist(input.GroupId) {
 		user.GroupID = input.GroupId
 	} else {
 		user.GroupID = group.DefaultGroupId
 	}
 
-	if trx := s.db.Conn().Create(&user); trx.Error != nil {
+	if trx := u.db.Conn().Create(&user); trx.Error != nil {
 		return User{}, trx.Error
 	}
 
 	return user, nil
 }
 
-func (s Service) FindById(userId uint) (User, error) {
+func (u UserService) FindById(userId uint) (User, error) {
 
 	user := User{}
 
-	if trx := s.db.Conn().Preload("Group").First(&user, "id = ?", userId); trx.Error != nil {
+	if trx := u.db.Conn().Preload("Group").First(&user, "id = ?", userId); trx.Error != nil {
 		return User{}, trx.Error
 	}
 
 	return user, nil
 }
 
-func (s Service) FindByEmail(email string) (User, error) {
+func (u UserService) FindByEmail(email string) (User, error) {
 
 	user := User{}
 
-	if trx := s.db.Conn().Preload("Group").First(&user, "email = ?", email); trx.Error != nil {
+	if trx := u.db.Conn().Preload("Group").First(&user, "email = ?", email); trx.Error != nil {
 		return User{}, trx.Error
 	}
 
 	return user, nil
 }
 
-func (s Service) SetLoggedTime(userId uint, t time.Time) error {
+func (u UserService) SetLoggedTime(userId uint, t time.Time) error {
 
-	if trx := s.db.Conn().Model(&User{}).Where("id = ?", userId).Update("last_logged", t); trx.Error != nil {
+	if trx := u.db.Conn().Model(&User{}).Where("id = ?", userId).Update("last_logged", t); trx.Error != nil {
 		return trx.Error
 	}
 

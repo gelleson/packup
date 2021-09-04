@@ -14,23 +14,22 @@ const (
 
 type Export struct {
 	gorm.Model
-	Name     string `validate:"required"`
-	Keystore string `validate:"required"`
-	Type     Type   `validate:"required,oneof=s3 fs"`
-	Tag      string `validate:"required"`
-
-	S3Endpoint string `validate:"required_if=Type s3" json:"s3_endpoint"`
-	S3Bucket   string `validate:"required_if=Type s3" json:"s3_bucket"`
-
-	FSPath string `validate:"required_if=Type fs" json:"fs_path"`
+	Name string `validate:"required"`
+	Key  string `validate:"required"`
+	Type Type   `validate:"required,oneof=s3 fs"`
+	Tag  string `validate:"required"`
 }
 
-type Snapshot struct {
+type Object struct {
 	gorm.Model
-	Size       uint
-	Filename   string
-	Namespace  string
-	UploadID   string
-	SnapshotID uint
-	UploadedAt time.Time
+	Size         uint
+	Bucket       string
+	Filename     string
+	StorageID    string
+	Type         Type
+	Downloadable bool
+	ExportID     uint
+	Export       Export
+	SnapshotID   uint
+	UploadedAt   time.Time
 }

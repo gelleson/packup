@@ -1,12 +1,12 @@
 package exporter
 
 import (
-	"fmt"
+	"context"
 	"github.com/gelleson/packup/pkg/database"
+	"github.com/gelleson/packup/pkg/helpers"
 	"github.com/gelleson/packup/pkg/upload"
 	"github.com/pkg/errors"
 	"io"
-	"strings"
 	"sync"
 )
 
@@ -27,7 +27,7 @@ func (s ExportService) findByTag(tag string) ([]Export, error) {
 	return exporters, nil
 }
 
-func (s ExportService) Export(snapshotId uint, namespace, tag, name string, size uint, body io.Reader) error {
+func (s ExportService) Export(ctx context.Context, snapshotId uint, namespace, tag, name string, size uint, body io.Reader) error {
 
 	exports, err := s.findByTag(tag)
 
@@ -43,10 +43,9 @@ func (s ExportService) Export(snapshotId uint, namespace, tag, name string, size
 		wg.Add(1)
 
 		go func(e Export) {
-
 			defer wg.Done()
 
-			if err := s.export(e.Type, snapshotId, namespace, name, size, body); err != nil {
+			if err := s.export(ctx, e.Type, snapshotId, namespace, name, size, body); err != nil {
 				errs = append(errs, err)
 			}
 
@@ -56,13 +55,13 @@ func (s ExportService) Export(snapshotId uint, namespace, tag, name string, size
 	wg.Wait()
 
 	if errs != nil {
-		return mergeErrors(errs)
+		return helpers.MergeErrors(errs)
 	}
 
 	return nil
 }
 
-func (s ExportService) export(ext Type, snapshotId uint, namespace, name string, size uint, body io.Reader) error {
+func (s ExportService) export(ctx context.Context, ext Type, snapshotId uint, namespace, name string, size uint, body io.Reader) error {
 
 	uploader, isOk := s.uploader[ext]
 
@@ -72,41 +71,29 @@ func (s ExportService) export(ext Type, snapshotId uint, namespace, name string,
 		return nil
 	}
 
-	id, err := uploader.Put(namespace, name, body)
+	id, err := uploader.Put(ctx, namespace, name, body)
 
 	if err != nil {
 		return err
 	}
 
-	snapshot := createSnapshot(id, snapshotId, namespace, name, size)
+	objectDTO := prepareObject(id, snapshotId, namespace, name, size)
 
-	if tx := s.db.Conn().Create(&snapshot); tx.Error != nil {
+	if tx := s.db.Conn().Create(&objectDTO); tx.Error != nil {
 		return tx.Error
 	}
 
 	return nil
 }
 
-func createSnapshot(id string, snapshotId uint, namespace, name string, size uint) Snapshot {
+func prepareObject(id string, snapshotId uint, namespace, name string, size uint) Object {
 
-	snapshot := Snapshot{
+	object := Object{
 		Size:       size,
 		Filename:   name,
-		Namespace:  namespace,
-		UploadID:   id,
+		StorageID:  id,
 		SnapshotID: snapshotId,
 	}
 
-	return snapshot
-}
-
-func mergeErrors(array []error) error {
-
-	errorString := make([]string, len(array), cap(array))
-
-	for index, err := range array {
-		errorString[index] = err.Error()
-	}
-
-	return fmt.Errorf(strings.Join(errorString, "\n"))
+	return object
 }

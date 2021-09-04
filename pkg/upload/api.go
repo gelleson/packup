@@ -1,8 +1,11 @@
 package upload
 
-import "io"
+import (
+	"context"
+	"io"
+)
 
 type Uploader interface {
-	Put(namespace string, filename string, body io.Reader) (string, error)
-	Get(namespace string, id string) (io.ReadCloser, error)
+	Put(ctx context.Context, namespace string, filename string, body io.Reader) (string, error)
+	Get(ctx context.Context, namespace string, id string) (io.ReadCloser, error)
 }

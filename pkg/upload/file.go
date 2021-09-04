@@ -1,6 +1,7 @@
 package upload
 
 import (
+	"context"
 	"io"
 	"os"
 	"path"
@@ -10,7 +11,7 @@ type FileProvider struct {
 	BaseFolder string
 }
 
-func (f FileProvider) Put(namespace string, filename string, body io.Reader) (string, error) {
+func (f FileProvider) Put(ctx context.Context, namespace string, filename string, body io.Reader) (string, error) {
 
 	if _, err := os.Stat(f.BaseFolder); os.IsNotExist(err) {
 		return "", err
@@ -40,7 +41,7 @@ func (f FileProvider) Put(namespace string, filename string, body io.Reader) (st
 	return filename, nil
 }
 
-func (f FileProvider) Get(namespace string, id string) (io.ReadCloser, error) {
+func (f FileProvider) Get(ctx context.Context, namespace string, id string) (io.ReadCloser, error) {
 
 	if _, err := os.Stat(f.BaseFolder); os.IsNotExist(err) {
 		return nil, err

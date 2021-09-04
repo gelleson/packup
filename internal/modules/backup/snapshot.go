@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"context"
 	"github.com/gelleson/packup/pkg/database"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -10,7 +11,7 @@ import (
 )
 
 type exporterService interface {
-	Export(snapshotId uint, namespace, tag, name string, size uint, body io.Reader) error
+	Export(ctx context.Context, snapshotId uint, namespace, tag, name string, size uint, body io.Reader) error
 }
 
 type bucketService interface {
@@ -23,7 +24,7 @@ type SnapshotService struct {
 	bucketService   bucketService
 }
 
-func (s SnapshotService) OK(agentId, backupId uint, objName string, size uint, body io.Reader) (Snapshot, error) {
+func (s SnapshotService) OK(ctx context.Context, agentId, backupId uint, objName string, size uint, body io.Reader) (Snapshot, error) {
 
 	backup, err := s.bucketService.FindById(backupId)
 
@@ -44,7 +45,7 @@ func (s SnapshotService) OK(agentId, backupId uint, objName string, size uint, b
 		return Snapshot{}, nil
 	}
 
-	if err := s.exporterService.Export(snapshot.ID, backup.Namespace, backup.Tag, objName, size, body); err != nil {
+	if err := s.exporterService.Export(ctx, snapshot.ID, backup.Namespace, backup.Tag, objName, size, body); err != nil {
 		snapshot.Message = err.Error()
 		snapshot.Status = ExportFailStatus
 		snapshot.ExecutedAt = time.Now()
@@ -67,7 +68,7 @@ func (s SnapshotService) OK(agentId, backupId uint, objName string, size uint, b
 	return snapshot, nil
 }
 
-func (s SnapshotService) Failed(agentId, backupId uint, errMessage error) (Snapshot, error) {
+func (s SnapshotService) Failed(ctx context.Context, agentId, backupId uint, errMessage error) (Snapshot, error) {
 
 	if errMessage == nil {
 		return Snapshot{}, errors.New("errMessage should be non nil value")

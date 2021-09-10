@@ -1,4 +1,4 @@
-package keystore
+package models
 
 import (
 	"github.com/gelleson/packup/pkg/validators"

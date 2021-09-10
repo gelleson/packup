@@ -1,3 +1,3 @@
-package group
+package constants
 
 const DefaultGroupId = 1

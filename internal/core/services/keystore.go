@@ -1,6 +1,7 @@
-package keystore
+package services
 
 import (
+	"github.com/gelleson/packup/internal/core/models"
 	"github.com/gelleson/packup/pkg/cipher"
 	"github.com/gelleson/packup/pkg/database"
 	"github.com/pkg/errors"
@@ -17,31 +18,31 @@ func NewKeystoreService(db *database.Database, cipherKey string) *KeystoreServic
 	return &KeystoreService{db: db, cipherKey: cipherKey}
 }
 
-func (s KeystoreService) Get(key string) (Credential, error) {
+func (s KeystoreService) Get(key string) (models.Credential, error) {
 
-	cred := Credential{}
+	cred := models.Credential{}
 
 	if tx := s.db.Conn().Where("key = ?", key).First(&cred); tx.Error != nil {
-		return Credential{}, tx.Error
+		return models.Credential{}, tx.Error
 	}
 
 	return cred, nil
 }
 
-func (s KeystoreService) Create(c Credential) (Credential, error) {
+func (s KeystoreService) Create(c models.Credential) (models.Credential, error) {
 
 	if err := c.Validate(); err != nil {
-		return Credential{}, err
+		return models.Credential{}, err
 	}
 
 	encryptedCredential, err := s.encrypt(c)
 
 	if err != nil {
-		return Credential{}, err
+		return models.Credential{}, err
 	}
 
 	if tx := s.db.Conn().Create(&encryptedCredential); tx.Error != nil {
-		return Credential{}, tx.Error
+		return models.Credential{}, tx.Error
 	}
 
 	return encryptedCredential, nil
@@ -49,7 +50,7 @@ func (s KeystoreService) Create(c Credential) (Credential, error) {
 
 func (s KeystoreService) Delete(key string) error {
 
-	if tx := s.db.Conn().Delete(&Credential{}, "key = ?", key); tx.Error != nil {
+	if tx := s.db.Conn().Delete(&models.Credential{}, "key = ?", key); tx.Error != nil {
 		return tx.Error
 	}
 
@@ -94,10 +95,10 @@ func (s KeystoreService) encryptOrGetEmpty(data string) (string, error) {
 	return encrypted, nil
 }
 
-func (s KeystoreService) encrypt(c Credential) (Credential, error) {
+func (s KeystoreService) encrypt(c models.Credential) (models.Credential, error) {
 
 	if err := s.checkCipherKey(); err != nil {
-		return Credential{}, err
+		return models.Credential{}, err
 	}
 
 	c.Username, _ = s.encryptOrGetEmpty(c.Username)

@@ -1,4 +1,4 @@
-package acl
+package models
 
 import "gorm.io/gorm"
 

@@ -1,16 +1,17 @@
-package backup
+package validators
 
 import (
+	"github.com/gelleson/packup/internal/core/models"
 	"github.com/pkg/errors"
 	"github.com/robfig/cron"
 	"github.com/teambition/rrule-go"
 	"time"
 )
 
-func isValidExecutionValue(b Backup) error {
+func IsValidExecutionValue(b models.Backup) error {
 
 	switch b.ExecutionType {
-	case OnceExecution:
+	case models.OnceExecution:
 
 		now := time.Now()
 
@@ -20,7 +21,7 @@ func isValidExecutionValue(b Backup) error {
 
 		return nil
 
-	case RruleExecution:
+	case models.RruleExecution:
 
 		if _, err := rrule.StrToRRule(b.Rrule); err != nil {
 			return err
@@ -28,7 +29,7 @@ func isValidExecutionValue(b Backup) error {
 
 		return nil
 
-	case CronExecution:
+	case models.CronExecution:
 
 		parser := cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
 
@@ -44,7 +45,7 @@ func isValidExecutionValue(b Backup) error {
 	}
 }
 
-func isValidTimezone(timezone string) error {
+func IsValidTimezone(timezone string) error {
 
 	_, err := time.LoadLocation(timezone)
 

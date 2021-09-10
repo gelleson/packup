@@ -1,6 +1,8 @@
-package backup
+package services
 
 import (
+	"github.com/gelleson/packup/internal/core/dto"
+	"github.com/gelleson/packup/internal/core/models"
 	"github.com/gelleson/packup/pkg/database"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -14,7 +16,7 @@ type exporterService interface {
 }
 
 type bucketService interface {
-	FindById(id uint) (Backup, error)
+	FindById(id uint) (models.Backup, error)
 }
 
 type SnapshotService struct {
@@ -23,64 +25,64 @@ type SnapshotService struct {
 	bucketService   bucketService
 }
 
-func (s SnapshotService) OK(agentId, backupId uint, objName string, size uint, body io.Reader) (Snapshot, error) {
+func (s SnapshotService) OK(agentId, backupId uint, objName string, size uint, body io.Reader) (models.Snapshot, error) {
 
-	backup, err := s.bucketService.FindById(backupId)
+	backupObject, err := s.bucketService.FindById(backupId)
 
 	if err != nil {
-		return Snapshot{}, err
+		return models.Snapshot{}, err
 	}
 
-	snapshot := Snapshot{
-		Status:     PendingStatus,
+	snapshot := models.Snapshot{
+		Status:     models.PendingStatus,
 		Size:       size,
 		AgentID:    agentId,
-		BackupID:   backup.ID,
-		Tag:        backup.Tag,
+		BackupID:   backupObject.ID,
+		Tag:        backupObject.Tag,
 		ExecutedAt: time.Now(),
 	}
 
 	if tx := s.db.Conn().Create(&snapshot); tx.Error != nil {
-		return Snapshot{}, nil
+		return models.Snapshot{}, nil
 	}
 
-	if err := s.exporterService.Export(snapshot.ID, backup.Namespace, backup.Tag, objName, size, body); err != nil {
+	if err := s.exporterService.Export(snapshot.ID, backupObject.Namespace, backupObject.Tag, objName, size, body); err != nil {
 		snapshot.Message = err.Error()
-		snapshot.Status = ExportFailStatus
+		snapshot.Status = models.ExportFailStatus
 		snapshot.ExecutedAt = time.Now()
 
 		if tx := s.db.Conn().Save(&snapshot); tx.Error != nil {
-			return Snapshot{}, tx.Error
+			return models.Snapshot{}, tx.Error
 		}
 
 		return snapshot, err
 	}
 
 	snapshot.Message = "ok"
-	snapshot.Status = OkStatus
+	snapshot.Status = models.OkStatus
 	snapshot.ExecutedAt = time.Now()
 
 	if tx := s.db.Conn().Save(&snapshot); tx.Error != nil {
-		return Snapshot{}, tx.Error
+		return models.Snapshot{}, tx.Error
 	}
 
 	return snapshot, nil
 }
 
-func (s SnapshotService) Failed(agentId, backupId uint, errMessage error) (Snapshot, error) {
+func (s SnapshotService) Failed(agentId, backupId uint, errMessage error) (models.Snapshot, error) {
 
 	if errMessage == nil {
-		return Snapshot{}, errors.New("errMessage should be non nil value")
+		return models.Snapshot{}, errors.New("errMessage should be non nil value")
 	}
 
 	backup, err := s.bucketService.FindById(backupId)
 
 	if err != nil {
-		return Snapshot{}, err
+		return models.Snapshot{}, err
 	}
 
-	snapshot := Snapshot{
-		Status:     FailedStatus,
+	snapshot := models.Snapshot{
+		Status:     models.FailedStatus,
 		AgentID:    agentId,
 		BackupID:   backup.ID,
 		Message:    errMessage.Error(),
@@ -89,15 +91,15 @@ func (s SnapshotService) Failed(agentId, backupId uint, errMessage error) (Snaps
 	}
 
 	if tx := s.db.Conn().Create(&snapshot); tx.Error != nil {
-		return Snapshot{}, nil
+		return models.Snapshot{}, nil
 	}
 
 	return snapshot, nil
 }
 
-func (s SnapshotService) Find(input FindSnapshotQuery) (SnapshotWithTotal, error) {
+func (s SnapshotService) Find(input dto.FindSnapshotQuery) (dto.SnapshotWithTotal, error) {
 
-	snapshotWithTotal := SnapshotWithTotal{}
+	snapshotWithTotal := dto.SnapshotWithTotal{}
 
 	input.Init()
 
@@ -132,13 +134,13 @@ func (s SnapshotService) Find(input FindSnapshotQuery) (SnapshotWithTotal, error
 	wg.Wait()
 
 	if errDb != nil {
-		return SnapshotWithTotal{}, errDb
+		return dto.SnapshotWithTotal{}, errDb
 	}
 
 	return snapshotWithTotal, nil
 }
 
-func queryConstructor(conn *gorm.DB, input FindSnapshotQuery) *gorm.DB {
+func queryConstructor(conn *gorm.DB, input dto.FindSnapshotQuery) *gorm.DB {
 
 	if input.Agent != 0 {
 		conn = conn.Where("agent_id", input.Agent)

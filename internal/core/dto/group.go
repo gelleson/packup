@@ -1,4 +1,4 @@
-package group
+package dto
 
 import "github.com/gelleson/packup/pkg/validators"
 

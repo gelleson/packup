@@ -5,17 +5,12 @@ import (
 	"github.com/gelleson/packup/pkg/database"
 )
 
-type keystoreService interface {
-	Get(key string) (models.Credential, error)
-}
-
 type BackupService struct {
-	db              *database.Database
-	keystoreService keystoreService
+	db *database.Database
 }
 
-func NewBackupService(db *database.Database, keystoreService keystoreService) *BackupService {
-	return &BackupService{db: db, keystoreService: keystoreService}
+func NewBackupService(db *database.Database) *BackupService {
+	return &BackupService{db: db}
 }
 
 func (bs BackupService) Create(b models.Backup) (models.Backup, error) {
@@ -25,12 +20,6 @@ func (bs BackupService) Create(b models.Backup) (models.Backup, error) {
 	}
 
 	b.SetDefaults()
-
-	if b.Keystore != "" {
-		if _, err := bs.keystoreService.Get(b.Keystore); err != nil {
-			return models.Backup{}, err
-		}
-	}
 
 	if tx := bs.db.Conn().Create(&b); tx.Error != nil {
 		return models.Backup{}, tx.Error
@@ -47,13 +36,7 @@ func (bs BackupService) Update(b models.Backup) (models.Backup, error) {
 
 	b.SetDefaults()
 
-	if b.Keystore != "" {
-		if _, err := bs.keystoreService.Get(b.Keystore); err != nil {
-			return models.Backup{}, err
-		}
-	}
-
-	if tx := bs.db.Conn().Model(&b).Updates(b); tx.Error != nil {
+	if tx := bs.db.Conn().Model(&models.Backup{}).Updates(b); tx.Error != nil {
 		return models.Backup{}, tx.Error
 	}
 

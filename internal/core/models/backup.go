@@ -98,22 +98,3 @@ const (
 	PendingStatus    Status = "pending"
 	ExportFailStatus Status = "export_failed"
 )
-
-type Snapshot struct {
-	gorm.Model
-	Status     Status
-	Message    string
-	Size       uint
-	Tag        string
-	AgentID    uint
-	BackupID   uint
-	Backup     Backup
-	ExecutedAt time.Time
-}
-
-type Pending struct {
-	gorm.Model
-	BackupID      uint
-	Backup        Backup
-	ExecutionTime time.Time
-}

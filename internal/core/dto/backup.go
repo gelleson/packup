@@ -1,4 +1,6 @@
-package backup
+package dto
+
+import "github.com/gelleson/packup/internal/core/models"
 
 const (
 	DefaultLimit uint = 100
@@ -25,6 +27,6 @@ func (f *FindSnapshotQuery) Init() {
 }
 
 type SnapshotWithTotal struct {
-	Snapshots []Snapshot `json:"snapshots"`
-	Total     int64      `json:"total"`
+	Snapshots []models.Snapshot `json:"snapshots"`
+	Total     int64             `json:"total"`
 }

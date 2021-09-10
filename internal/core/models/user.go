@@ -1,7 +1,6 @@
-package user
+package models
 
 import (
-	"github.com/gelleson/packup/internal/modules/group"
 	"gorm.io/gorm"
 	"time"
 )
@@ -13,7 +12,7 @@ type User struct {
 	IsActive bool
 
 	GroupID uint
-	Group   group.Group
+	Group   Group
 
 	CreatedAt  time.Time
 	LastLogged time.Time

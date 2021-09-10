@@ -1,4 +1,4 @@
-package backup
+package models
 
 import (
 	"github.com/gelleson/packup/pkg/compress"
@@ -62,11 +62,11 @@ func (b Backup) Validate() error {
 		return err
 	}
 
-	if err := isValidExecutionValue(b); err != nil {
+	if err := validators.IsValidExecutionValue(b); err != nil {
 		return err
 	}
 
-	if err := isValidTimezone(b.Timezone); err != nil {
+	if err := validators.IsValidTimezone(b.Timezone); err != nil {
 		return err
 	}
 
@@ -98,22 +98,3 @@ const (
 	PendingStatus    Status = "pending"
 	ExportFailStatus Status = "export_failed"
 )
-
-type Snapshot struct {
-	gorm.Model
-	Status     Status
-	Message    string
-	Size       uint
-	Tag        string
-	AgentID    uint
-	BackupID   uint
-	Backup     Backup
-	ExecutedAt time.Time
-}
-
-type Pending struct {
-	gorm.Model
-	BackupID      uint
-	Backup        Backup
-	ExecutionTime time.Time
-}

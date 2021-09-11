@@ -3,6 +3,7 @@ package compress
 import (
 	"compress/gzip"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -19,11 +20,13 @@ func (c compressObject) Close() error {
 	return os.Remove(c.Name())
 }
 
-func Compress(compressType Type, body io.Reader, path string) (io.ReadCloser, error) {
+func Compress(compressType Type, body io.Reader) (io.ReadCloser, error) {
 
 	switch compressType {
 	case GzipType:
 		return gzipCompress(body)
+	case NoneType:
+		return ioutil.NopCloser(body), nil
 	}
 
 	return nil, nil

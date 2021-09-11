@@ -1,4 +1,4 @@
-package upload
+package storage
 
 import (
 	"io"
@@ -8,6 +8,10 @@ import (
 
 type FileProvider struct {
 	BaseFolder string
+}
+
+func NewFileProvider(baseFolder string) *FileProvider {
+	return &FileProvider{BaseFolder: baseFolder}
 }
 
 func (f FileProvider) Put(namespace string, filename string, body io.Reader) (string, error) {

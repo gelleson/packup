@@ -1,7 +1,8 @@
-package upload
+package storage
 
 import (
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,10 @@ import (
 type S3Provider struct {
 	client *s3.S3
 	bucket string
+}
+
+func NewS3Provider(session *session.Session, bucket string) *S3Provider {
+	return &S3Provider{bucket: bucket, client: s3.New(session)}
 }
 
 func (s S3Provider) Put(namespace string, filename string, body io.Reader) (string, error) {

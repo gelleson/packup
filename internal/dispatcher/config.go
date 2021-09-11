@@ -1,6 +1,10 @@
 package dispatcher
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/gelleson/packup/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"io"
@@ -12,6 +16,7 @@ type Config struct {
 	ServerConfig   ServerConfig
 	EncryptConfig  EncryptConfig
 	LoggerConfig   LoggerConfig
+	StorageConfig  StorageConfig
 }
 
 type OutType string
@@ -70,4 +75,45 @@ type ServerConfig struct {
 }
 
 type EncryptConfig struct {
+}
+
+type StorageConfig struct {
+	Provider   string
+	BaseFolder string
+
+	AccessKey        string
+	SecretKey        string
+	S3ForcePathStyle *bool
+	Bucket           string
+	Endpoint         *string
+	Region           *string
+}
+
+func (u StorageConfig) GetProvider() (storage.API, error) {
+
+	switch u.Provider {
+	case "file":
+		return storage.NewFileProvider(u.BaseFolder), nil
+	case "s3":
+		config := aws.Config{
+			S3ForcePathStyle: u.S3ForcePathStyle,
+			Endpoint:         u.Endpoint,
+			Region:           u.Region,
+			Credentials:      credentials.NewStaticCredentials(u.AccessKey, u.SecretKey, ""),
+		}
+
+		if u.AccessKey != "" && u.SecretKey != "" {
+			config.Credentials = credentials.NewStaticCredentials(u.AccessKey, u.SecretKey, "")
+		}
+
+		sess, err := session.NewSession(&config)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return storage.NewS3Provider(sess, u.Bucket), nil
+	default:
+		return storage.NewFileProvider(u.BaseFolder), nil
+	}
 }

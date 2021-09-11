@@ -1,9 +1,9 @@
-package services
+package service
 
 import (
 	"github.com/gelleson/packup/internal/core/constants"
 	"github.com/gelleson/packup/internal/core/dto"
-	"github.com/gelleson/packup/internal/core/models"
+	"github.com/gelleson/packup/internal/core/model"
 	"github.com/gelleson/packup/pkg/database"
 	"time"
 )
@@ -21,13 +21,13 @@ func NewUserService(db *database.Database, groupService groupUserService) *UserS
 	return &UserService{db: db, groupService: groupService}
 }
 
-func (u UserService) Create(input dto.CreateUserInput) (models.User, error) {
+func (u UserService) Create(input dto.CreateUserInput) (model.User, error) {
 
 	if err := input.Validate(); err != nil {
-		return models.User{}, err
+		return model.User{}, err
 	}
 
-	user := models.User{
+	user := model.User{
 		Email:    input.Email,
 		Password: input.Password,
 	}
@@ -39,29 +39,29 @@ func (u UserService) Create(input dto.CreateUserInput) (models.User, error) {
 	}
 
 	if trx := u.db.Conn().Create(&user); trx.Error != nil {
-		return models.User{}, trx.Error
+		return model.User{}, trx.Error
 	}
 
 	return user, nil
 }
 
-func (u UserService) FindById(userId uint) (models.User, error) {
+func (u UserService) FindById(userId uint) (model.User, error) {
 
-	user := models.User{}
+	user := model.User{}
 
 	if trx := u.db.Conn().Preload("Group").First(&user, "id = ?", userId); trx.Error != nil {
-		return models.User{}, trx.Error
+		return model.User{}, trx.Error
 	}
 
 	return user, nil
 }
 
-func (u UserService) FindByEmail(email string) (models.User, error) {
+func (u UserService) FindByEmail(email string) (model.User, error) {
 
-	user := models.User{}
+	user := model.User{}
 
 	if trx := u.db.Conn().Preload("Group").First(&user, "email = ?", email); trx.Error != nil {
-		return models.User{}, trx.Error
+		return model.User{}, trx.Error
 	}
 
 	return user, nil
@@ -69,7 +69,7 @@ func (u UserService) FindByEmail(email string) (models.User, error) {
 
 func (u UserService) SetLoggedTime(userId uint, t time.Time) error {
 
-	if trx := u.db.Conn().Model(&models.User{}).Where("id = ?", userId).Update("last_logged", t); trx.Error != nil {
+	if trx := u.db.Conn().Model(&model.User{}).Where("id = ?", userId).Update("last_logged", t); trx.Error != nil {
 		return trx.Error
 	}
 

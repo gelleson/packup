@@ -1,7 +1,7 @@
-package services
+package service
 
 import (
-	"github.com/gelleson/packup/internal/core/models"
+	"github.com/gelleson/packup/internal/core/model"
 	"github.com/gelleson/packup/pkg/cipher"
 	"github.com/gelleson/packup/pkg/database"
 	"github.com/pkg/errors"
@@ -18,31 +18,31 @@ func NewKeystoreService(db *database.Database, cipherKey string) *KeystoreServic
 	return &KeystoreService{db: db, cipherKey: cipherKey}
 }
 
-func (s KeystoreService) Get(key string) (models.Credential, error) {
+func (s KeystoreService) Get(key string) (model.Credential, error) {
 
-	cred := models.Credential{}
+	cred := model.Credential{}
 
 	if tx := s.db.Conn().Where("key = ?", key).First(&cred); tx.Error != nil {
-		return models.Credential{}, tx.Error
+		return model.Credential{}, tx.Error
 	}
 
 	return cred, nil
 }
 
-func (s KeystoreService) Create(c models.Credential) (models.Credential, error) {
+func (s KeystoreService) Create(c model.Credential) (model.Credential, error) {
 
 	if err := c.Validate(); err != nil {
-		return models.Credential{}, err
+		return model.Credential{}, err
 	}
 
 	encryptedCredential, err := s.encrypt(c)
 
 	if err != nil {
-		return models.Credential{}, err
+		return model.Credential{}, err
 	}
 
 	if tx := s.db.Conn().Create(&encryptedCredential); tx.Error != nil {
-		return models.Credential{}, tx.Error
+		return model.Credential{}, tx.Error
 	}
 
 	return encryptedCredential, nil
@@ -50,7 +50,7 @@ func (s KeystoreService) Create(c models.Credential) (models.Credential, error) 
 
 func (s KeystoreService) Delete(key string) error {
 
-	if tx := s.db.Conn().Delete(&models.Credential{}, "key = ?", key); tx.Error != nil {
+	if tx := s.db.Conn().Delete(&model.Credential{}, "key = ?", key); tx.Error != nil {
 		return tx.Error
 	}
 
@@ -95,10 +95,10 @@ func (s KeystoreService) encryptOrGetEmpty(data string) (string, error) {
 	return encrypted, nil
 }
 
-func (s KeystoreService) encrypt(c models.Credential) (models.Credential, error) {
+func (s KeystoreService) encrypt(c model.Credential) (model.Credential, error) {
 
 	if err := s.checkCipherKey(); err != nil {
-		return models.Credential{}, err
+		return model.Credential{}, err
 	}
 
 	c.Username, _ = s.encryptOrGetEmpty(c.Username)

@@ -27,6 +27,7 @@ type LoggerConfig struct {
 	DisableTimestamp bool
 	Out              OutType
 	OutFileName      string
+	PrintFuncName    bool
 }
 
 func (c LoggerConfig) GetOut() (io.Writer, error) {

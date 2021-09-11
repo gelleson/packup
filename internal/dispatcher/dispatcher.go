@@ -2,6 +2,7 @@ package dispatcher
 
 import (
 	"github.com/sirupsen/logrus"
+	"os"
 )
 
 type Dispatcher struct {
@@ -26,6 +27,9 @@ func New(config Config) (*Dispatcher, error) {
 				PrettyPrint:      config.LoggerConfig.PrettyPrint,
 				DisableTimestamp: config.LoggerConfig.DisableTimestamp,
 			},
+			ExitFunc:     os.Exit,
+			Hooks:        make(logrus.LevelHooks),
+			ReportCaller: config.LoggerConfig.PrintFuncName,
 		},
 	}, nil
 }

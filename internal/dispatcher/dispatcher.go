@@ -1,13 +1,16 @@
 package dispatcher
 
 import (
+	"github.com/gelleson/packup/pkg/database"
 	"github.com/sirupsen/logrus"
 	"os"
 )
 
 type Dispatcher struct {
-	config Config
-	logger *logrus.Logger
+	config         Config
+	logger         *logrus.Logger
+	dispatcherInit bool
+	db             *database.Database
 }
 
 func New(config Config) (*Dispatcher, error) {
@@ -18,7 +21,7 @@ func New(config Config) (*Dispatcher, error) {
 		return nil, err
 	}
 
-	return &Dispatcher{
+	dispatcher := &Dispatcher{
 		config: config,
 		logger: &logrus.Logger{
 			Out:   out,
@@ -31,5 +34,26 @@ func New(config Config) (*Dispatcher, error) {
 			Hooks:        make(logrus.LevelHooks),
 			ReportCaller: config.LoggerConfig.PrintFuncName,
 		},
-	}, nil
+	}
+
+	if err := dispatcher.init(); err != nil {
+		return nil, err
+	}
+
+	return dispatcher, nil
+}
+
+func (d *Dispatcher) init() error {
+
+	if err := d.config.DatabaseConfig.Validate(); err != nil {
+		return err
+	}
+
+	d.db = database.NewDatabase(database.Config{
+		DSN: d.config.DatabaseConfig.URL,
+	})
+
+	d.dispatcherInit = true
+
+	return nil
 }

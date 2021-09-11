@@ -57,6 +57,15 @@ type DatabaseConfig struct {
 	URL string
 }
 
+func (c DatabaseConfig) Validate() error {
+
+	if c.URL == "" {
+		return errors.New("url should be set up")
+	}
+
+	return nil
+}
+
 type ServerConfig struct {
 }
 

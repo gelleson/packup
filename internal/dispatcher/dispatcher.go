@@ -53,6 +53,10 @@ func (d *Dispatcher) init() error {
 		DSN: d.config.DatabaseConfig.URL,
 	})
 
+	if err := d.db.Connect(); err != nil {
+		return err
+	}
+
 	d.dispatcherInit = true
 
 	return nil
